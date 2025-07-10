@@ -24,12 +24,19 @@ Custom Prometheus exporter to collect resource metrics from **VMware vCloud Dire
 
 ## <a name="features"></a>✅ Features
 
-- Connects to VMware vCloud Director API via OAuth2
+- OAuth2-based connection to VMware vCloud Director API with automatic bearer-token caching and refresh  
 - Collects usage & allocation data from:
   - Provider Clusters
   - Virtual Data Centers (VDC)
-- Exposes Prometheus-compatible metrics via `/metrics`
-- Supports pagination and large VDCs
+- Collects detailed cluster metrics:
+  - CPU & memory **allocated**, **reserved**, **used**, **overhead**
+  - Storage **allocated**, **limit**, **used**
+- Collects storage profile metrics per cluster:
+  - Total/used **capacity** (MB)
+  - IOPS **capacity** & **allocated**
+- Exposes total count of VDC records as `vcd_vdc_total_records`
+- Provides `/metrics` endpoint for Prometheus and a `/health` endpoint for liveness checks
+- Supports pagination for large VDC and providerVdc queries
 - Works standalone or in Docker
 
 ---
@@ -63,9 +70,9 @@ cp vcd_exporter_example vcd_exporter.env
 2. **Edit `vcd_exporter.env` with your VCD connection details**:
 
 ```dotenv
-VCD_URL=https://<vcd.example>/api/query?type=adminOrgVdc&pageSize=128&page=1 ###put your address
-VCD_API_TOKEN= ###you have to create it from vcloud directory user preferences 
-VCLOUD_API_VERSION=  ###depends on vcloud session version. for example 37.0 or 38.0
+VCD_API_TOKEN=   # Obtain this API token in vCloud Director: log in, click your username (top right) → “User Preferences” → “API Tokens” (requires System Administrator rights), then create/copy your token
+VCD_URL=https://<url>/api/query?type=adminOrgVdc&pageSize=128&page=1
+VCD_API_VERSION=   # You can find the API version via Swagger in vCloud Director (Help → API Docs), e.g., 38.0 or 37.0
 VCD_VERIFY_SSL=false
 VCD_PAGE_SIZE=128
 EXPORTER_PORT=8000
@@ -141,21 +148,34 @@ If you need a ready-to-import Grafana dashboard JSON, check the `/grafana` direc
 
 ## <a name="exposed-metrics"></a>📈 Exposed Metrics
 
-| Metric Name                            | Description                              |
-|----------------------------------------|------------------------------------------|
-| `vcd_vdc_cpu_allocated`                | CPU allocated to VDC (MHz)               |
-| `vcd_vdc_cpu_used`                     | CPU used by VDC (MHz)                    |
-| `vcd_vdc_memory_allocated`            | Memory allocated to VDC (MB)             |
-| `vcd_vdc_memory_used`                 | Memory used by VDC (MB)                  |
-| `vcd_vdc_storage_allocated_mb`        | Storage allocated to VDC (MB)            |
-| `vcd_vdc_storage_used_mb`             | Storage used by VDC (MB)                 |
-| `vcd_vdc_vm_count`                    | Number of VMs in VDC                     |
-| `vcd_cluster_cpu_total`               | Total CPU in cluster (MHz)               |
-| `vcd_cluster_cpu_reserved`            | Reserved CPU in cluster (MHz)            |
-| `vcd_cluster_cpu_used`                | Used CPU in cluster (MHz)                |
-| `vcd_cluster_memory_total`            | Total memory in cluster (MB)             |
-| `vcd_cluster_memory_reserved`         | Reserved memory in cluster (MB)          |
-| `vcd_cluster_memory_used`             | Used memory in cluster (MB)              |
+| Metric Name                                 | Description                                         |
+|---------------------------------------------|-----------------------------------------------------|
+| `vcd_vdc_cpu_allocated`                     | CPU allocated to VDC (MHz)                          |
+| `vcd_vdc_cpu_used`                          | CPU used by VDC (MHz)                               |
+| `vcd_vdc_mem_allocated_mb`                  | Memory allocated to VDC (MB)                        |
+| `vcd_vdc_mem_used_mb`                       | Memory used by VDC (MB)                             |
+| `vcd_vdc_vm_count`                          | Number of VMs in VDC                                |
+| `vcd_vdc_storage_allocated_mb`              | Storage limit for VDC (MB)                          |
+| `vcd_vdc_storage_used_mb`                   | Storage used by VDC (MB)                            |
+| `vcd_vdc_total_records`                     | Total number of VDC records retrieved               |
+| `vcd_cluster_cpu_allocated`                 | Allocated CPU for cluster (MHz)                     |
+| `vcd_cluster_cpu_reserved`                  | Reserved CPU for cluster (MHz)                      |
+| `vcd_cluster_cpu_total`                     | Total CPU for cluster (MHz)                         |
+| `vcd_cluster_cpu_used`                      | Used CPU for cluster (MHz)                          |
+| `vcd_cluster_cpu_overhead`                  | Overhead CPU for cluster (MHz)                      |
+| `vcd_cluster_mem_allocated_mb`              | Allocated memory for cluster (MB)                   |
+| `vcd_cluster_mem_reserved_mb`               | Reserved memory for cluster (MB)                    |
+| `vcd_cluster_mem_total_mb`                  | Total memory for cluster (MB)                       |
+| `vcd_cluster_mem_used_mb`                   | Used memory for cluster (MB)                        |
+| `vcd_cluster_mem_overhead_mb`               | Overhead memory for cluster (MB)                    |
+| `vcd_cluster_storage_allocated_mb`          | Storage allocated for cluster (MB)                  |
+| `vcd_cluster_storage_limit_mb`              | Storage limit for cluster (MB)                      |
+| `vcd_cluster_storage_used_mb`               | Storage used in cluster (MB)                        |
+| `vcd_storage_profile_info`                  | Storage profile info (always 1)                     |
+| `vcd_storage_profile_capacity_total_mb`     | Total capacity for storage profile (MB)             |
+| `vcd_storage_profile_capacity_used_mb`      | Used capacity for storage profile (MB)              |
+| `vcd_storage_profile_iops_capacity`         | IOPS capacity for storage profile                   |
+| `vcd_storage_profile_iops_allocated`        | IOPS allocated for storage profile                  |
 
 ---
 
