@@ -190,6 +190,6 @@ This project is licensed under the [MIT License](./LICENSE).
 
 ## <a name="author"></a>👤 Author
 
-Maintained by [tilzhanov](https://gitlab.com/tilzhanov) and [Temirlaaan](https://gitlab.com/Temirlaaan)
+Maintained by [tilzhanov](https://github.com/tilzhanov) and [Temirlaaan](https://github.com/Temirlaaan)
 
 If you use this exporter — please ⭐️ the project or share feedback!
